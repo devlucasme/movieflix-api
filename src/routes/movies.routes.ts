@@ -5,7 +5,15 @@ const router = Router();
 const prisma = new PrismaClient();
 
 router.get('/', async (req, res) => {
-    const movies = await prisma.movie.findMany();
+    const movies = await prisma.movie.findMany({
+        orderBy: {
+            title: 'asc'
+        },
+        include: {
+            genres: true,
+            languages: true
+        }
+    });
     res.json(movies);
 })
 
