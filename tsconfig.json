@@ -11,6 +11,8 @@
     "target": "esnext",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "resolveJsonModule": true,
+    
     "types": [],
     // For nodejs:
     // "lib": ["esnext"],
