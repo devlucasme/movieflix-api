@@ -60,11 +60,9 @@ router.put('/:id', async (req, res) => {
             where: {
                 id
             }
-        })
+        });
 
-        if (!movie) {
-            return res.status(404).json({ message: 'Filme não encontrado' })
-        }
+        if (!movie) return res.status(404).json({ message: 'Filme não encontrado' });
 
         const data = { ...req.body }
         data.release_date = data.release_date ? new Date(data.release_date) : undefined; 
@@ -74,14 +72,33 @@ router.put('/:id', async (req, res) => {
                 id
             },
             data: data
-        })
+        });
 
     } catch (error) {
-        return res.status(500).json({ message: 'Erro interno do servidor' })
+        return res.status(500).json({ message: 'Erro interno do servidor' });
     }
 
-    return res.status(200).json({ message: 'Filme atualizado com sucesso' })
+    return res.status(200).json({ message: 'Filme atualizado com sucesso' });
 
+})
+
+router.delete('/:id', async (req, res) => {
+
+    const id = Number(req.params.id);
+
+    try {
+
+        const movie = await prisma.movie.findUnique({ where: { id } });
+
+        if (!movie) return res.status(404).json({ message: 'Filme não encontrado' });
+
+        await prisma.movie.delete({ where: { id } })
+
+    } catch (error) {
+        return res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+
+    res.status(200).json({ message: 'Filme deletado com sucesso' });
 })
 
 export default router;
