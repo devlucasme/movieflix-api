@@ -5,16 +5,49 @@ const router = Router();
 const prisma = new PrismaClient();
 
 router.get('/', async (req, res) => {
-    const movies = await prisma.movie.findMany({
-        orderBy: {
-            title: 'asc'
-        },
-        include: {
-            genres: true,
-            languages: true
-        }
-    });
-    res.json(movies);
+    try {
+        const movies = await prisma.movie.findMany({
+            orderBy: {
+                title: 'asc'
+            },
+            include: {
+                genres: true,
+                languages: true
+            }
+        });
+        res.json(movies);
+    } catch (error) {
+        res.status(500).json({ messagem: 'Falha ao listar filmes' })
+    }
+})
+
+router.get('/:genreName', async (req, res) => {
+    try {
+
+        const genreName = req.params.genreName;
+
+        const movieFilteredByGenreName = await prisma.movie.findMany({
+            include: {
+                genres: true,
+                languages: true
+            },
+            where: {
+                genres: {
+                    name: {
+                        equals: genreName,
+                        mode: 'insensitive'
+                    }
+                }
+            }
+        })
+
+        if (movieFilteredByGenreName.length === 0) return res.status(404).json({ message: 'Gênero não encontrado' });
+
+        res.status(200).json(movieFilteredByGenreName);
+
+    } catch (error) {
+        res.status(500).json({ message: 'Falha ao filtrar os filmes pelo gênero' })
+    }
 })
 
 router.post('/', async (req, res) => {
@@ -27,12 +60,10 @@ router.post('/', async (req, res) => {
         }
     })
 
-    if (movieWithSameName) {
-        return res.status(409).json({ message: 'Já existe um filme cadastrado com esse título' });
-    }
+    if (movieWithSameName) return res.status(409).json({ message: 'Já existe um filme cadastrado com esse título' });
 
     try {
-        
+
         await prisma.movie.create({
             data: {
                 title,
@@ -51,9 +82,9 @@ router.post('/', async (req, res) => {
 })
 
 router.put('/:id', async (req, res) => {
-    
+
     const id = Number(req.params.id);
-    
+
     try {
 
         const movie = await prisma.movie.findUnique({
@@ -65,7 +96,7 @@ router.put('/:id', async (req, res) => {
         if (!movie) return res.status(404).json({ message: 'Filme não encontrado' });
 
         const data = { ...req.body }
-        data.release_date = data.release_date ? new Date(data.release_date) : undefined; 
+        data.release_date = data.release_date ? new Date(data.release_date) : undefined;
 
         await prisma.movie.update({
             where: {
@@ -75,10 +106,10 @@ router.put('/:id', async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({ message: 'Erro interno do servidor' });
+        res.status(500).json({ message: 'Falha ao atualizar o filme' });
     }
 
-    return res.status(200).json({ message: 'Filme atualizado com sucesso' });
+    res.status(200).json({ message: 'Filme atualizado com sucesso' });
 
 })
 
@@ -95,7 +126,7 @@ router.delete('/:id', async (req, res) => {
         await prisma.movie.delete({ where: { id } })
 
     } catch (error) {
-        return res.status(500).json({ message: 'Erro interno do servidor' });
+        res.status(500).json({ message: 'Falha ao deletar o filme' });
     }
 
     res.status(200).json({ message: 'Filme deletado com sucesso' });
